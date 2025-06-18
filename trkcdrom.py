@@ -54,7 +54,7 @@ def getromuuid():
 	return duuid
 
 def getromsize():
-	size = subprocess.check_output("df -h --output=used /dev/sr0", shell=True, text=True).strip()
+	size = subprocess.check_output("df -H --output=used /dev/sr0", shell=True, text=True).strip()
 	used = size.strip('Used \n ')
 	return used
 
@@ -84,38 +84,44 @@ def writelog(rlabel,rsize,rid, rmd,rsid):
 
 if not os.path.exists(file_dir+archive):
     os.mknod(file_dir+archive)
-
-clearterm()
-closetray()
-romlabel = getromlabel()
-print("ROM Label: "+romlabel)
-print("Searching Archive ....", end='\r')
-analyse = search_archive(romlabel) # Search for ROM
-
-try:
-	# ROM found do analysis and append to archive line
-	if analyse[3] >= "0":
-		print("ROM Found in Archive....")
-		print("\n-----Archive Data-----")
-		print("INDEX: "+analyse[0])
-		print("Label: "+analyse[1])
-		print("Size: "+analyse[2])
-		print("ID: "+analyse[3])
-		print("SUID: "+analyse[5])
-		print("Stamp: "+analyse[6])
-		archive_md5 = analyse[4]
-		dmd5 = makerommd5()
-		print("Archive md5sum: "+archive_md5)
-		print("CD-ROM md5sum : "+dmd5)
-		opentray()
-
-except:
-	# do scann and add to archive
-	print("ROM Not Found In Archive ....")
-	print("Scanning New ROM ....", end='\r')
-	romuuid = getromuuid()
+while 1:
+	clearterm()
+	closetray()
+	romlabel = getromlabel()
 	romsize = getromsize()
-	dmd5 = makerommd5()
-	romsuid = makesuid(dmd5)
-	writelog(romlabel,romsize,romuuid,dmd5,romsuid)
-	opentray()
+	print("ROM Label: "+romlabel+" : "+romsize)
+	print("Searching Archive ....", end='\r')
+	analyse = search_archive(romlabel) # Search for ROM
+
+	try:
+		# ROM found do analysis and append to archive line
+		if analyse[3] >= "0":
+			print("ROM Found in Archive....")
+			print("\n-----Archive Data-----")
+			print("INDEX: "+analyse[0])
+			print("Label: "+analyse[1])
+			print("Size: "+analyse[2])
+			print("ID: "+analyse[3])
+			print("SUID: "+analyse[5])
+			print("Stamp: "+analyse[6])
+			archive_md5 = analyse[4]
+			dmd5 = makerommd5()
+			print("Archive md5sum: "+archive_md5)
+			print("CD-ROM md5sum : "+dmd5)
+			opentray()	
+
+	except:
+		# do scann and add to archive
+		print("ROM Not Found In Archive ....")
+		print("Scanning New ROM ....", end='\r')
+		romuuid = getromuuid()
+		dmd5 = makerommd5()
+		romsuid = makesuid(dmd5)
+		writelog(romlabel,romsize,romuuid,dmd5,romsuid)
+		opentray()
+	restart = input("Continue? n=quit :")
+	if restart == 'n':
+		closetray()
+		exit()
+		
+		
