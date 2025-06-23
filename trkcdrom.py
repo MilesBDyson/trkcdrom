@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# CD-ROM scanning too to create md5sum > SUID. With checking and logging of entries
+# CD-ROM scanning to create md5sum > SUID. With checking and logging of entries
 
 import hashlib
 import shortuuid
@@ -44,6 +44,7 @@ def opentray():
 
 def closetray():
 	os.system("eject -t /dev/cdrom")
+	time.sleep(15) # need time to let os mount cdrom
 
 def getromlabel():
 	label = subprocess.check_output("blkid -o value -s LABEL /dev/sr0", shell=True, text=True).strip()
@@ -89,7 +90,7 @@ while 1:
 	closetray()
 	romlabel = getromlabel()
 	romsize = getromsize()
-	print("ROM Label: "+romlabel+" : "+romsize)
+	print("ROM Label: "+romlabel+" @"+romsize)
 	print("Searching Archive ....", end='\r')
 	analyse = search_archive(romlabel) # Search for ROM
 
@@ -117,11 +118,11 @@ while 1:
 		romuuid = getromuuid()
 		dmd5 = makerommd5()
 		romsuid = makesuid(dmd5)
-		writelog(romlabel,romsize,romuuid,dmd5,romsuid)
 		opentray()
+		writelog(romlabel,romsize,romuuid,dmd5,romsuid)
 	restart = input("Continue? n=quit :")
 	if restart == 'n':
-		closetray()
+		os.system("eject -t /dev/cdrom")
 		exit()
 		
 		
